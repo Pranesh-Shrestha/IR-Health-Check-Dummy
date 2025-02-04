@@ -1,174 +1,59 @@
 name: Cypress Tests with Report and Notification on TEAMS
-
+ 
 on:
+  schedule:
+    - cron: "0 */6 * * *"  # 6hours 
   workflow_dispatch:
-
+ 
 jobs:
   cypress-tests:
     runs-on: ubuntu-latest
-
+ 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-
+        uses: actions/checkout@v3
+ 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
-          node-version: '20'
-
+          node-version: '16'
+ 
       - name: Install dependencies
         run: npm install
-
+ 
       - name: Install Cypress and reporter
         run: npm install cypress cypress-mochawesome-reporter
-
+ 
       - name: Run Cypress tests with Mochawesome
-        id: cypress_run
         env:
           CYPRESS_EMAIL: ${{ secrets.CYPRESS_EMAIL }}
           CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
+          CYPRESS_MOCHAWESOME_REPORT_DIR: cypress/reports  # Moved inside the `env` block
         run: |
-          # Run Cypress with correct options
-          npx cypress run \
-            --env email=$CYPRESS_EMAIL,password=$CYPRESS_PASSWORD \
-            --reporter mochawesome \
-            --reporter-options "reportDir=cypress/reports,overwrite=false,html=true,json=true" \
-            --config retries=2 \
-            2>&1 | tee cypress-output.log || true
-
-          # Store the Cypress exit code
-          CYPRESS_EXIT_CODE=${PIPESTATUS[0]}
-          echo "cypress_exit_code=$CYPRESS_EXIT_CODE" >> $GITHUB_OUTPUT
-
-      - name: Parse test results
-        id: test_results
-        run: |
-          # Initialize variables with default values
-          TOTAL=0
-          PASSED=0
-          FAILED=0
-          PENDING=0
-
-          # First try to get results from mochawesome report
-          if [ -f "cypress/reports/mochawesome.json" ]; then
-            echo "Reading from mochawesome.json..."
-            TOTAL=$(jq '.stats.tests' cypress/reports/mochawesome.json || echo "0")
-            PASSED=$(jq '.stats.passes' cypress/reports/mochawesome.json || echo "0")
-            FAILED=$(jq '.stats.failures' cypress/reports/mochawesome.json || echo "0")
-            PENDING=$(jq '.stats.pending' cypress/reports/mochawesome.json || echo "0")
-          else
-            echo "mochawesome.json not found, checking cypress-output.log..."
-            # Try to parse from Cypress output log
-            if [ -f "cypress-output.log" ]; then
-              # Extract numbers following specific patterns
-              TOTAL=$(grep -oP "(?<=Running: )\d+" cypress-output.log | tail -1)
-              PASSED=$(grep -oP "(?<=✓ )\d+(?= passing)" cypress-output.log | tail -1)
-              FAILED=$(grep -oP "(?<=✖ )\d+(?= failing)" cypress-output.log | tail -1)
-              PENDING=$(grep -oP "(?<=- )\d+(?= pending)" cypress-output.log | tail -1)
-              
-              # Set to 0 if not found
-              TOTAL=${TOTAL:-0}
-              PASSED=${PASSED:-0}
-              FAILED=${FAILED:-0}
-              PENDING=${PENDING:-0}
-            fi
-          fi
-
-          # Export the values
-          echo "TOTAL=$TOTAL" >> $GITHUB_ENV
-          echo "PASSED=$PASSED" >> $GITHUB_ENV
-          echo "FAILED=$FAILED" >> $GITHUB_ENV
-          echo "PENDING=$PENDING" >> $GITHUB_ENV
-          
-          # Debug output
-          echo "Test Results:"
-          echo "Total: $TOTAL"
-          echo "Passed: $PASSED"
-          echo "Failed: $FAILED"
-          echo "Pending: $PENDING"
-
-      # Rest of the steps remain the same...
-      - name: Generate merged report
-        if: always()
-        run: |
-          if ls cypress/reports/*.json 1>/dev/null 2>&1; then
-            npx mochawesome-merge cypress/reports/*.json > cypress/reports/full_report.json
-            npx marge cypress/reports/full_report.json -f report -o cypress/reports
-          else
-            echo "No JSON reports found. Skipping merge."
-          fi
-
-      - name: Upload test reports
+          echo "Email: $CYPRESS_EMAIL"  # Debugging
+          echo "Password: $CYPRESS_PASSWORD"  # Debugging
+          npx cypress run --env email=$CYPRESS_EMAIL,password=$CYPRESS_PASSWORD --reporter mochawesome --reporter-options "reportDir=cypress/reports,overwrite=false,html=true,json=true"
+ 
+      - name: Debug - Check Reports Directory
+        run: ls -R cypress/reports || echo "No reports generated"
+ 
+      - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cypress-reports
-          path: |
-            cypress/reports
-            cypress/screenshots
-            cypress/videos
-          retention-days: 30
-          if-no-files-found: warn
-
-      - name: Process and send results to Teams
-        if: always()
+          name: cypress-report
+          path: cypress/reports/
+          if-no-files-found: warn  # Prevents workflow failure if no reports exist
+ 
+      - name: Send notification to Microsoft Teams
+        if: always()  # Ensures notification is sent even if tests fail
+        run: |
+          STATUS="✅ IR Daily Health Check tests passed !"
+          if [ "${{ job.status }}" != 'success' ]; then STATUS="❌ IR Daily Health Check tests failed !"; fi
+          curl -H "Content-Type: application/json" -d '{
+            "title": "IR Daily Health Check Test Results",
+            "text": "'"$STATUS"'\n[Cypress Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+            "themeColor": "'"${{ job.status == 'success' && '0076D7' || 'FF0000' }}"'"
+          }' $TEAMS_WEBHOOK_URL
         env:
           TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
-        run: |
-          # Read values from environment
-          TOTAL="${TOTAL:-0}"
-          PASSED="${PASSED:-0}"
-          FAILED="${FAILED:-0}"
-          PENDING="${PENDING:-0}"
-          
-          # Calculate success rate
-          if [ "$TOTAL" -eq 0 ]; then
-            SUCCESS_RATE="0.00"
-          else
-            SUCCESS_RATE=$(echo "scale=2; ($PASSED * 100)/$TOTAL" | bc)
-          fi
-
-          # Determine status color
-          if [ "$FAILED" -eq 0 ]; then
-            COLOR="good"
-            STATUS="✅ Success"
-          else
-            COLOR="attention"
-            STATUS="❌ Failed"
-          fi
-
-          # Create Teams message card
-          curl -H "Content-Type: application/json" -X POST -d '{
-            "type": "message",
-            "attachments": [{
-              "contentType": "application/vnd.microsoft.card.adaptive",
-              "content": {
-                "type": "AdaptiveCard",
-                "body": [{
-                  "type": "TextBlock",
-                  "size": "Large",
-                  "weight": "Bolder",
-                  "text": "Cypress Test Results",
-                  "color": "'"$COLOR"'"
-                },
-                {
-                  "type": "TextBlock",
-                  "text": "'"$STATUS"'",
-                  "weight": "Bolder",
-                  "color": "'"$COLOR"'"
-                },
-                {
-                  "type": "FactSet",
-                  "facts": [
-                    { "title": "Total Tests", "value": "'"$TOTAL"'" },
-                    { "title": "Passed", "value": "'"$PASSED"'" },
-                    { "title": "Failed", "value": "'"$FAILED"'" },
-                    { "title": "Pending", "value": "'"$PENDING"'" },
-                    { "title": "Success Rate", "value": "'"$SUCCESS_RATE"'%" }
-                  ]
-                }],
-                "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-                "version": "1.2"
-              }
-            }]
-          }' $TEAMS_WEBHOOK_URL
