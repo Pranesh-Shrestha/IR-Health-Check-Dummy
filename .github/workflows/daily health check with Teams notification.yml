@@ -92,7 +92,8 @@ jobs:
         if: always()
         run: |
           # Determine status and color based on results
-          if [ "${{ steps.cypress.outputs.failed }}" == "0" ]; then
+          FAILED_COUNT="${{ steps.cypress.outputs.failed }}"
+          if [[ "$FAILED_COUNT" -eq 0 ]]; then
             STATUS="✅ IR Daily Health Check tests completed successfully"
             COLOR="good"
           else
