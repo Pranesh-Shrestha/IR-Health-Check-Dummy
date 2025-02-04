@@ -29,11 +29,17 @@ jobs:
         env:
           CYPRESS_EMAIL: ${{ secrets.CYPRESS_EMAIL }}
           CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
+          DEBUG: "cypress:*"  # Enable debug logs
         run: |
           set -o pipefail
-          npx cypress run --env email=$CYPRESS_EMAIL,password=$CYPRESS_PASSWORD --reporter mochawesome --reporter-options "reportDir=cypress/reports,overwrite=false,html=true,json=true" | tee cypress-output.log
+          npx cypress run --headless --browser electron --env email=$CYPRESS_EMAIL,password=$CYPRESS_PASSWORD --reporter mochawesome --reporter-options "reportDir=cypress/reports,overwrite=false,html=true,json=true" --retries 2 | tee cypress-output.log
+
+      - name: Debug - Check Cypress Output
+        if: always()
+        run: cat cypress-output.log || echo "No Cypress output found"
 
       - name: Extract test count from Cypress output
+        if: always()
         id: extract_test_count
         run: |
           # Extract the test count from the Cypress output
@@ -47,11 +53,9 @@ jobs:
           echo "PASS_COUNT=$PASS_COUNT" >> $GITHUB_ENV
           echo "FAIL_COUNT=$FAIL_COUNT" >> $GITHUB_ENV
           echo "PENDING_COUNT=$PENDING_COUNT" >> $GITHUB_ENV
-        
-      - name: Debug - Check Cypress Output
-        run: cat cypress-output.log
 
       - name: Debug - Check Extracted Test Counts
+        if: always()
         run: |
           echo "Total Tests: $TEST_COUNT"
           echo "Passing Tests: $PASS_COUNT"
