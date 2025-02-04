@@ -1,59 +1,98 @@
 name: Cypress Tests with Report and Notification on TEAMS
- 
+
 on:
   schedule:
-    - cron: "0 */6 * * *"  # 6hours 
+    - cron: "0 */6 * * *" # 6hours
   workflow_dispatch:
- 
+
 jobs:
   cypress-tests:
     runs-on: ubuntu-latest
- 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
- 
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '16'
- 
+
       - name: Install dependencies
         run: npm install
- 
+
       - name: Install Cypress and reporter
         run: npm install cypress cypress-mochawesome-reporter
- 
+
       - name: Run Cypress tests with Mochawesome
+        id: cypress
+        continue-on-error: true
         env:
           CYPRESS_EMAIL: ${{ secrets.CYPRESS_EMAIL }}
           CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
-          CYPRESS_MOCHAWESOME_REPORT_DIR: cypress/reports  # Moved inside the `env` block
+          CYPRESS_MOCHAWESOME_REPORT_DIR: cypress/reports
         run: |
-          echo "Email: $CYPRESS_EMAIL"  # Debugging
-          echo "Password: $CYPRESS_PASSWORD"  # Debugging
-          npx cypress run --env email=$CYPRESS_EMAIL,password=$CYPRESS_PASSWORD --reporter mochawesome --reporter-options "reportDir=cypress/reports,overwrite=false,html=true,json=true"
- 
+          npx cypress run --env email=$CYPRESS_EMAIL,password=$CYPRESS_PASSWORD \
+            --reporter cypress-multi-reporters \
+            --reporter-options configFile=reporter-config.json \
+            | tee cypress-output.txt
+
+          # Extract test results using grep and awk
+          TOTAL=$(grep -o "Total:\s*[0-9]\+" cypress-output.txt | awk '{print $2}')
+          PASSED=$(grep -o "Passed:\s*[0-9]\+" cypress-output.txt | awk '{print $2}')
+          FAILED=$(grep -o "Failed:\s*[0-9]\+" cypress-output.txt | awk '{print $2}')
+          SKIPPED=$(grep -o "Skipped:\s*[0-9]\+" cypress-output.txt | awk '{print $2}')
+          
+          # Calculate success rate
+          if [ "$TOTAL" -gt 0 ]; then
+            SUCCESS_RATE=$(awk "BEGIN {print (($PASSED/$TOTAL) * 100)}")
+          else
+            SUCCESS_RATE=0
+          fi
+
+          # Store results as step outputs
+          echo "total=$TOTAL" >> $GITHUB_OUTPUT
+          echo "passed=$PASSED" >> $GITHUB_OUTPUT
+          echo "failed=$FAILED" >> $GITHUB_OUTPUT
+          echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
+          echo "success_rate=$SUCCESS_RATE" >> $GITHUB_OUTPUT
+
       - name: Debug - Check Reports Directory
         run: ls -R cypress/reports || echo "No reports generated"
- 
+
       - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: cypress-report
           path: cypress/reports/
-          if-no-files-found: warn  # Prevents workflow failure if no reports exist
- 
+          if-no-files-found: warn
+
       - name: Send notification to Microsoft Teams
-        if: always()  # Ensures notification is sent even if tests fail
+        if: always()
         run: |
-          STATUS="✅ IR Daily Health Check tests passed !"
-          if [ "${{ job.status }}" != 'success' ]; then STATUS="❌ IR Daily Health Check tests failed !"; fi
-          curl -H "Content-Type: application/json" -d '{
+          STATUS="✅ IR Daily Health Check tests completed"
+          if [ "${{ steps.cypress.outputs.failed }}" != "0" ]; then
+            STATUS="❌ IR Daily Health Check tests failed"
+          fi
+
+          JSON_PAYLOAD=$(cat << EOF
+          {
             "title": "IR Daily Health Check Test Results",
-            "text": "'"$STATUS"'\n[Cypress Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})",
-            "themeColor": "'"${{ job.status == 'success' && '0076D7' || 'FF0000' }}"'"
-          }' $TEAMS_WEBHOOK_URL
+            "sections": [{
+              "facts": [
+                { "name": "Total Tests:", "value": "${{ steps.cypress.outputs.total }}" },
+                { "name": "Passed:", "value": "${{ steps.cypress.outputs.passed }}" },
+                { "name": "Failed:", "value": "${{ steps.cypress.outputs.failed }}" },
+                { "name": "Skipped:", "value": "${{ steps.cypress.outputs.skipped }}" },
+                { "name": "Success Rate:", "value": "${{ steps.cypress.outputs.success_rate }}%" }
+              ]
+            }],
+            "text": "$STATUS\n[View Detailed Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+            "themeColor": "${{ steps.cypress.outputs.failed == 0 && '0076D7' || 'FF0000' }}"
+          }
+          EOF
+          )
+
+          curl -H "Content-Type: application/json" -d "$JSON_PAYLOAD" $TEAMS_WEBHOOK_URL
         env:
           TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
