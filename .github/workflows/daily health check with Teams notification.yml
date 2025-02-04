@@ -1,6 +1,8 @@
 name: Cypress Tests with Report and Notification on TEAMS
 
 on:
+  schedule:
+    - cron: "0 */6 * * *"  # Every 6 hours
   workflow_dispatch:
 
 jobs:
@@ -9,12 +11,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '16'
 
       - name: Install dependencies
         run: npm install
@@ -23,55 +25,38 @@ jobs:
         run: npm install cypress cypress-mochawesome-reporter
 
       - name: Run Cypress tests with Mochawesome
-        id: cypress_run
+        id: cypress-run
         env:
           CYPRESS_EMAIL: ${{ secrets.CYPRESS_EMAIL }}
           CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
         run: |
-          # Run Cypress and store the output
-          npx cypress run --env email=$CYPRESS_EMAIL,password=$CYPRESS_PASSWORD --reporter mochawesome --reporter-options "reportDir=cypress/reports,overwrite=false,html=true,json=true" > cypress-output.txt 2>&1
-          exit_code=$?
-          
-          # Store the exit code
-          echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
+          set -o pipefail
+          npx cypress run --env email=$CYPRESS_EMAIL,password=$CYPRESS_PASSWORD --reporter mochawesome --reporter-options "reportDir=cypress/reports,overwrite=false,html=true,json=true" | tee cypress-output.log
 
-      - name: Extract test results
-        id: test_results
+      - name: Extract test count from Cypress output
+        id: extract_test_count
         run: |
-          # Initialize variables
-          TOTAL=0
-          PASSED=0
-          FAILED=0
-          PENDING=0
-          
-          # Read the Mochawesome JSON report
-          if [ -f "cypress/reports/mochawesome.json" ]; then
-            # Use jq to parse the JSON and extract test counts
-            TOTAL=$(jq '.stats.tests' cypress/reports/mochawesome.json)
-            PASSED=$(jq '.stats.passes' cypress/reports/mochawesome.json)
-            FAILED=$(jq '.stats.failures' cypress/reports/mochawesome.json)
-            PENDING=$(jq '.stats.pending' cypress/reports/mochawesome.json)
-          else
-            echo "Warning: mochawesome.json not found, falling back to log parsing"
-            # Fallback to log parsing if JSON not found
-            TOTAL=$(grep -c '"state": "passed\|failed\|pending"' cypress/reports/*.json 2>/dev/null || echo "0")
-            PASSED=$(grep -c '"state": "passed"' cypress/reports/*.json 2>/dev/null || echo "0")
-            FAILED=$(grep -c '"state": "failed"' cypress/reports/*.json 2>/dev/null || echo "0")
-            PENDING=$(grep -c '"state": "pending"' cypress/reports/*.json 2>/dev/null || echo "0")
-          fi
-          
-          # Export the values
-          echo "TOTAL=$TOTAL" >> $GITHUB_ENV
-          echo "PASSED=$PASSED" >> $GITHUB_ENV
-          echo "FAILED=$FAILED" >> $GITHUB_ENV
-          echo "PENDING=$PENDING" >> $GITHUB_ENV
-          
-          # Debug output
-          echo "Test Results:"
-          echo "Total: $TOTAL"
-          echo "Passed: $PASSED"
-          echo "Failed: $FAILED"
-          echo "Pending: $PENDING"
+          # Extract the test count from the Cypress output
+          TEST_COUNT=$(grep -oP '(?<=Tests:        )\d+' cypress-output.log || echo "0")
+          PASS_COUNT=$(grep -oP '(?<=Passing:      )\d+' cypress-output.log || echo "0")
+          FAIL_COUNT=$(grep -oP '(?<=Failing:      )\d+' cypress-output.log || echo "0")
+          PENDING_COUNT=$(grep -oP '(?<=Pending:      )\d+' cypress-output.log || echo "0")
+
+          # Output the counts for use in subsequent steps
+          echo "TEST_COUNT=$TEST_COUNT" >> $GITHUB_ENV
+          echo "PASS_COUNT=$PASS_COUNT" >> $GITHUB_ENV
+          echo "FAIL_COUNT=$FAIL_COUNT" >> $GITHUB_ENV
+          echo "PENDING_COUNT=$PENDING_COUNT" >> $GITHUB_ENV
+        
+      - name: Debug - Check Cypress Output
+        run: cat cypress-output.log
+
+      - name: Debug - Check Extracted Test Counts
+        run: |
+          echo "Total Tests: $TEST_COUNT"
+          echo "Passing Tests: $PASS_COUNT"
+          echo "Failing Tests: $FAIL_COUNT"
+          echo "Pending Tests: $PENDING_COUNT"
 
       - name: Generate merged report
         if: always()
@@ -100,21 +85,15 @@ jobs:
         env:
           TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
         run: |
-          # Read values from environment
-          TOTAL="${TOTAL:-0}"
-          PASSED="${PASSED:-0}"
-          FAILED="${FAILED:-0}"
-          PENDING="${PENDING:-0}"
-          
           # Calculate success rate
-          if [ "$TOTAL" -eq 0 ]; then
+          if [ "$TEST_COUNT" -eq 0 ]; then
             SUCCESS_RATE="0.00"
           else
-            SUCCESS_RATE=$(echo "scale=2; ($PASSED * 100)/$TOTAL" | bc)
+            SUCCESS_RATE=$(echo "scale=2; ($PASS_COUNT * 100)/$TEST_COUNT" | bc)
           fi
 
           # Determine status color
-          if [ "$FAILED" -eq 0 ]; then
+          if [ "$FAIL_COUNT" -eq 0 ]; then
             COLOR="good"
             STATUS="✅ Success"
           else
@@ -145,10 +124,10 @@ jobs:
                 {
                   "type": "FactSet",
                   "facts": [
-                    { "title": "Total Tests", "value": "'"$TOTAL"'" },
-                    { "title": "Passed", "value": "'"$PASSED"'" },
-                    { "title": "Failed", "value": "'"$FAILED"'" },
-                    { "title": "Pending", "value": "'"$PENDING"'" },
+                    { "title": "Total Tests", "value": "'"$TEST_COUNT"'" },
+                    { "title": "Passed", "value": "'"$PASS_COUNT"'" },
+                    { "title": "Failed", "value": "'"$FAIL_COUNT"'" },
+                    { "title": "Pending", "value": "'"$PENDING_COUNT"'" },
                     { "title": "Success Rate", "value": "'"$SUCCESS_RATE"'%" }
                   ]
                 }],
