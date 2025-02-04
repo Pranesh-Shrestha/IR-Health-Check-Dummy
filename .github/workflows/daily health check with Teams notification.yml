@@ -36,24 +36,85 @@ jobs:
  
       - name: Debug - Check Reports Directory
         run: ls -R cypress/reports || echo "No reports generated"
+        
+      - name: Generate merged report
+        if: always()
+        run: |
+          npx mochawesome-merge cypress/reports/*.json > cypress/reports/full_report.json
+          npx marge cypress/reports/full_report.json -f report -o cypress/reports
  
-      - name: Upload test report
+      - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cypress-report
-          path: cypress/reports/
-          if-no-files-found: warn  # Prevents workflow failure if no reports exist
+          name: cypress-reports
+          path: |
+            cypress/reports
+            cypress/screenshots
+            cypress/videos
+          retention-days: 30
+          if-no-files-found: warn
  
-      - name: Send notification to Microsoft Teams
-        if: always()  # Ensures notification is sent even if tests fail
-        run: |
-          STATUS="✅ IR Daily Health Check tests passed !"
-          if [ "${{ job.status }}" != 'success' ]; then STATUS="❌ IR Daily Health Check tests failed !"; fi
-          curl -H "Content-Type: application/json" -d '{
-            "title": "IR Daily Health Check Test Results",
-            "text": "'"$STATUS"'\n[Cypress Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})",
-            "themeColor": "'"${{ job.status == 'success' && '0076D7' || 'FF0000' }}"'"
-          }' $TEAMS_WEBHOOK_URL
+      - name: Process and send results to Teams
+        if: always()
         env:
           TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+        run: |
+          # Check if report exists
+          if [ -f "cypress/reports/full_report.json" ]; then
+            # Extract test results
+            STATS=$(jq '.stats' cypress/reports/full_report.json)
+            PASS_COUNT=$(echo $STATS | jq '.passes')
+            FAIL_COUNT=$(echo $STATS | jq '.failures')
+            PENDING_COUNT=$(echo $STATS | jq '.pending')
+            TOTAL_COUNT=$(echo $STATS | jq '.tests')
+            DURATION=$(echo $STATS | jq '.duration')
+            
+            # Format duration to seconds
+            DURATION_SEC=$(echo "scale=2; $DURATION/1000" | bc)
+            
+            # Calculate success rate
+            SUCCESS_RATE=$(echo "scale=2; ($PASS_COUNT * 100)/$TOTAL_COUNT" | bc)
+            
+            # Determine status color
+            if [ $FAIL_COUNT -eq 0 ]; then
+              COLOR="00ff00"  # Green
+            else
+              COLOR="ff0000"  # Red
+            fi
+            
+            # Create Teams message card
+            curl -H "Content-Type: application/json" -X POST -d '{
+              "type": "message",
+              "attachments": [{
+                "contentType": "application/vnd.microsoft.card.adaptive",
+                "content": {
+                  "type": "AdaptiveCard",
+                  "body": [{
+                    "type": "TextBlock",
+                    "size": "Large",
+                    "weight": "Bolder",
+                    "text": "Cypress Test Results"
+                  },
+                  {
+                    "type": "FactSet",
+                    "facts": [
+                      { "title": "Total Tests", "value": "'"$TOTAL_COUNT"'" },
+                      { "title": "Passed", "value": "'"$PASS_COUNT"'" },
+                      { "title": "Failed", "value": "'"$FAIL_COUNT"'" },
+                      { "title": "Pending", "value": "'"$PENDING_COUNT"'" },
+                      { "title": "Success Rate", "value": "'"$SUCCESS_RATE"'%" },
+                      { "title": "Duration", "value": "'"$DURATION_SEC"' seconds" }
+                    ]
+                  }],
+                  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                  "version": "1.2"
+                }
+              }]
+            }' $TEAMS_WEBHOOK_URL
+          else
+            echo "No test report found"
+            curl -H "Content-Type: application/json" -X POST -d '{
+              "text": "⚠️ Cypress test run completed but no report was generated. Please check the workflow logs for errors."
+            }' $TEAMS_WEBHOOK_URL
+          fi
