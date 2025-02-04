@@ -23,44 +23,56 @@ jobs:
         run: npm install cypress cypress-mochawesome-reporter
 
       - name: Run Cypress tests with Mochawesome
+        id: cypress_run
         env:
           CYPRESS_EMAIL: ${{ secrets.CYPRESS_EMAIL }}
           CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
         run: |
-          npx cypress run --env email=$CYPRESS_EMAIL,password=$CYPRESS_PASSWORD --reporter mochawesome --reporter-options "reportDir=cypress/reports,overwrite=false,html=true,json=true" | tee cypress-output.log
-
-      - name: Extract test count from Cypress output
-        id: extract_test_count
-        run: |
-          # More robust patterns to match Cypress output
-          TOTAL_PATTERN="[[:space:]]([0-9]+)[[:space:]]total"
-          PASSED_PATTERN="[[:space:]]([0-9]+)[[:space:]]passing"
-          FAILED_PATTERN="[[:space:]]([0-9]+)[[:space:]]failing"
-          SKIPPED_PATTERN="[[:space:]]([0-9]+)[[:space:]]skipped"
+          # Run Cypress and store the output
+          npx cypress run --env email=$CYPRESS_EMAIL,password=$CYPRESS_PASSWORD --reporter mochawesome --reporter-options "reportDir=cypress/reports,overwrite=false,html=true,json=true" > cypress-output.txt 2>&1
+          exit_code=$?
           
-          # Extract counts using case-insensitive grep
-          TEST_COUNT=$(grep -iP "$TOTAL_PATTERN" cypress-output.log | grep -oP "$TOTAL_PATTERN" | grep -oP "[0-9]+" || echo "0")
-          PASS_COUNT=$(grep -iP "$PASSED_PATTERN" cypress-output.log | grep -oP "$PASSED_PATTERN" | grep -oP "[0-9]+" || echo "0")
-          FAIL_COUNT=$(grep -iP "$FAILED_PATTERN" cypress-output.log | grep -oP "$FAILED_PATTERN" | grep -oP "[0-9]+" || echo "0")
-          PENDING_COUNT=$(grep -iP "$SKIPPED_PATTERN" cypress-output.log | grep -oP "$SKIPPED_PATTERN" | grep -oP "[0-9]+" || echo "0")
+          # Store the exit code
+          echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
+
+      - name: Extract test results
+        id: test_results
+        run: |
+          # Initialize variables
+          TOTAL=0
+          PASSED=0
+          FAILED=0
+          PENDING=0
+          
+          # Read the Mochawesome JSON report
+          if [ -f "cypress/reports/mochawesome.json" ]; then
+            # Use jq to parse the JSON and extract test counts
+            TOTAL=$(jq '.stats.tests' cypress/reports/mochawesome.json)
+            PASSED=$(jq '.stats.passes' cypress/reports/mochawesome.json)
+            FAILED=$(jq '.stats.failures' cypress/reports/mochawesome.json)
+            PENDING=$(jq '.stats.pending' cypress/reports/mochawesome.json)
+          else
+            echo "Warning: mochawesome.json not found, falling back to log parsing"
+            # Fallback to log parsing if JSON not found
+            TOTAL=$(grep -c '"state": "passed\|failed\|pending"' cypress/reports/*.json 2>/dev/null || echo "0")
+            PASSED=$(grep -c '"state": "passed"' cypress/reports/*.json 2>/dev/null || echo "0")
+            FAILED=$(grep -c '"state": "failed"' cypress/reports/*.json 2>/dev/null || echo "0")
+            PENDING=$(grep -c '"state": "pending"' cypress/reports/*.json 2>/dev/null || echo "0")
+          fi
+          
+          # Export the values
+          echo "TOTAL=$TOTAL" >> $GITHUB_ENV
+          echo "PASSED=$PASSED" >> $GITHUB_ENV
+          echo "FAILED=$FAILED" >> $GITHUB_ENV
+          echo "PENDING=$PENDING" >> $GITHUB_ENV
           
           # Debug output
-          echo "Found counts in log file:"
-          echo "Total: $TEST_COUNT"
-          echo "Passed: $PASS_COUNT"
-          echo "Failed: $FAIL_COUNT"
-          echo "Pending: $PENDING_COUNT"
-          
-          # Set environment variables
-          echo "TEST_COUNT=$TEST_COUNT" >> $GITHUB_ENV
-          echo "PASS_COUNT=$PASS_COUNT" >> $GITHUB_ENV
-          echo "FAIL_COUNT=$FAIL_COUNT" >> $GITHUB_ENV
-          echo "PENDING_COUNT=$PENDING_COUNT" >> $GITHUB_ENV
+          echo "Test Results:"
+          echo "Total: $TOTAL"
+          echo "Passed: $PASSED"
+          echo "Failed: $FAILED"
+          echo "Pending: $PENDING"
 
-      - name: Debug - Display Cypress Output
-        run: cat cypress-output.log
-
-      # Rest of the steps remain the same...
       - name: Generate merged report
         if: always()
         run: |
@@ -88,15 +100,21 @@ jobs:
         env:
           TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
         run: |
+          # Read values from environment
+          TOTAL="${TOTAL:-0}"
+          PASSED="${PASSED:-0}"
+          FAILED="${FAILED:-0}"
+          PENDING="${PENDING:-0}"
+          
           # Calculate success rate
-          if [ "$TEST_COUNT" -eq 0 ]; then
+          if [ "$TOTAL" -eq 0 ]; then
             SUCCESS_RATE="0.00"
           else
-            SUCCESS_RATE=$(echo "scale=2; ($PASS_COUNT * 100)/$TEST_COUNT" | bc)
+            SUCCESS_RATE=$(echo "scale=2; ($PASSED * 100)/$TOTAL" | bc)
           fi
 
           # Determine status color
-          if [ "$FAIL_COUNT" -eq 0 ]; then
+          if [ "$FAILED" -eq 0 ]; then
             COLOR="good"
             STATUS="✅ Success"
           else
@@ -127,10 +145,10 @@ jobs:
                 {
                   "type": "FactSet",
                   "facts": [
-                    { "title": "Total Tests", "value": "'"$TEST_COUNT"'" },
-                    { "title": "Passed", "value": "'"$PASS_COUNT"'" },
-                    { "title": "Failed", "value": "'"$FAIL_COUNT"'" },
-                    { "title": "Pending", "value": "'"$PENDING_COUNT"'" },
+                    { "title": "Total Tests", "value": "'"$TOTAL"'" },
+                    { "title": "Passed", "value": "'"$PASSED"'" },
+                    { "title": "Failed", "value": "'"$FAILED"'" },
+                    { "title": "Pending", "value": "'"$PENDING"'" },
                     { "title": "Success Rate", "value": "'"$SUCCESS_RATE"'%" }
                   ]
                 }],
