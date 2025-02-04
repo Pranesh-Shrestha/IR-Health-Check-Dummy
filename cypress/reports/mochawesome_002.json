@@ -1,0 +1,194 @@
+{
+  "stats": {
+    "suites": 1,
+    "tests": 5,
+    "passes": 2,
+    "pending": 0,
+    "failures": 3,
+    "start": "2025-01-31T10:47:01.134Z",
+    "end": "2025-01-31T10:47:25.381Z",
+    "duration": 24247,
+    "testsRegistered": 5,
+    "passPercent": 40,
+    "pendingPercent": 0,
+    "other": 0,
+    "hasOther": false,
+    "skipped": 0,
+    "hasSkipped": false
+  },
+  "results": [
+    {
+      "uuid": "4fb0c959-df81-4c8f-b721-694fc86f79f7",
+      "title": "",
+      "fullFile": "cypress\\e2e\\Pages\\Dashboard\\LoginPage.cy.js",
+      "file": "cypress\\e2e\\Pages\\Dashboard\\LoginPage.cy.js",
+      "beforeHooks": [],
+      "afterHooks": [],
+      "tests": [],
+      "suites": [
+        {
+          "uuid": "86852cc8-d57d-42a5-868a-48a7743ca735",
+          "title": "InvisiRisk Login Page - Authentication Test Suite",
+          "fullFile": "",
+          "file": "",
+          "beforeHooks": [],
+          "afterHooks": [],
+          "tests": [
+            {
+              "title": "Validate error message with invalid credentials",
+              "fullTitle": "InvisiRisk Login Page - Authentication Test Suite Validate error message with invalid credentials",
+              "timedOut": null,
+              "duration": 4854,
+              "state": "failed",
+              "speed": null,
+              "pass": false,
+              "fail": true,
+              "pending": false,
+              "context": null,
+              "code": "// Generate invalid credentials before passing to origin\ncy.invalidEmail().then(email => {\n  cy.invalidPassword().then(password => {\n    cy.performLogin(email, password);\n    cy.validateErrorMessage();\n  });\n});",
+              "err": {
+                "message": "CypressError: `cy.origin()` requires the first argument to be a different domain than top. You passed `https://auth.invisirisk.com` to the origin command, while top is at `https://app.invisirisk.com`.\n\nEither the intended page was not visited prior to running the cy.origin block or the cy.origin block may not be needed at all.\n\nhttps://on.cypress.io/origin",
+                "estack": "CypressError: `cy.origin()` requires the first argument to be a different domain than top. You passed `https://auth.invisirisk.com` to the origin command, while top is at `https://app.invisirisk.com`.\n\nEither the intended page was not visited prior to running the cy.origin block or the cy.origin block may not be needed at all.\n\nhttps://on.cypress.io/origin\n    at Validator.validateLocation (https://app.invisirisk.com/__cypress/runner/cypress_runner.js:120857:68)\n    at Context.origin (https://app.invisirisk.com/__cypress/runner/cypress_runner.js:120560:17)\n    at wrapped (https://app.invisirisk.com/__cypress/runner/cypress_runner.js:138663:43)\nFrom Your Spec Code:\n    at Context.eval (webpack://clear/./cypress/support/commands.js:40:5)",
+                "diff": null
+              },
+              "uuid": "49815f18-f0f4-4a05-87c2-b43ab9947ce5",
+              "parentUUID": "86852cc8-d57d-42a5-868a-48a7743ca735",
+              "isHook": false,
+              "skipped": false
+            },
+            {
+              "title": "Validate successful login with valid credentials",
+              "fullTitle": "InvisiRisk Login Page - Authentication Test Suite Validate successful login with valid credentials",
+              "timedOut": null,
+              "duration": 5088,
+              "state": "passed",
+              "speed": "medium",
+              "pass": true,
+              "fail": false,
+              "pending": false,
+              "context": null,
+              "code": "const email = Cypress.env(\"email\");\nconst password = Cypress.env(\"password\");\ncy.performLogin(email, password);\ncy.url().should(\"include\", \"https://app.invisirisk.com\");\ncy.validateLogin();",
+              "err": {},
+              "uuid": "f1f70aa6-e16a-4e95-86ca-552775cfaac0",
+              "parentUUID": "86852cc8-d57d-42a5-868a-48a7743ca735",
+              "isHook": false,
+              "skipped": false
+            },
+            {
+              "title": "Verify logout functionality and redirection to authentication page",
+              "fullTitle": "InvisiRisk Login Page - Authentication Test Suite Verify logout functionality and redirection to authentication page",
+              "timedOut": null,
+              "duration": 9577,
+              "state": "passed",
+              "speed": "medium",
+              "pass": true,
+              "fail": false,
+              "pending": false,
+              "context": null,
+              "code": "const email = Cypress.env(\"email\");\nconst password = Cypress.env(\"password\");\n// Login first\ncy.performLogin(email, password);\ncy.validateLogin();\ncy.get('[data-id=\"account_menu\"]').should(\"be.visible\").click();\ncy.get('[role=\"menuitem\"]').click();",
+              "err": {},
+              "uuid": "de7a5e76-4997-470b-89e7-97a8a61e3975",
+              "parentUUID": "86852cc8-d57d-42a5-868a-48a7743ca735",
+              "isHook": false,
+              "skipped": false
+            },
+            {
+              "title": "Validate toggle password visibility functionality",
+              "fullTitle": "InvisiRisk Login Page - Authentication Test Suite Validate toggle password visibility functionality",
+              "timedOut": null,
+              "duration": 822,
+              "state": "failed",
+              "speed": null,
+              "pass": false,
+              "fail": true,
+              "pending": false,
+              "context": null,
+              "code": "cy.origin(\"https://auth.invisirisk.com\", () => {\n  cy.get(\"#password\").type(\"i@mdoingF9\");\n  cy.get(\"button.ulp-button-icon\").click();\n  cy.get(\"#password\").should(\"have.attr\", \"type\", \"text\");\n});",
+              "err": {
+                "message": "CypressError: `cy.origin()` requires the first argument to be a different domain than top. You passed `https://auth.invisirisk.com` to the origin command, while top is at `https://app.invisirisk.com`.\n\nEither the intended page was not visited prior to running the cy.origin block or the cy.origin block may not be needed at all.\n\nhttps://on.cypress.io/origin",
+                "estack": "CypressError: `cy.origin()` requires the first argument to be a different domain than top. You passed `https://auth.invisirisk.com` to the origin command, while top is at `https://app.invisirisk.com`.\n\nEither the intended page was not visited prior to running the cy.origin block or the cy.origin block may not be needed at all.\n\nhttps://on.cypress.io/origin\n    at Validator.validateLocation (https://app.invisirisk.com/__cypress/runner/cypress_runner.js:120857:68)\n    at Context.origin (https://app.invisirisk.com/__cypress/runner/cypress_runner.js:120560:17)\n    at wrapped (https://app.invisirisk.com/__cypress/runner/cypress_runner.js:138663:43)\nFrom Your Spec Code:\n    at Context.eval (webpack://clear/./cypress/e2e/Pages/Dashboard/LoginPage.cy.js:39:7)",
+                "diff": null
+              },
+              "uuid": "88754a30-e1e9-44aa-944a-41e107fb22e2",
+              "parentUUID": "86852cc8-d57d-42a5-868a-48a7743ca735",
+              "isHook": false,
+              "skipped": false
+            },
+            {
+              "title": "Verify Forgot Password link navigates to reset password page",
+              "fullTitle": "InvisiRisk Login Page - Authentication Test Suite Verify Forgot Password link navigates to reset password page",
+              "timedOut": null,
+              "duration": 423,
+              "state": "failed",
+              "speed": null,
+              "pass": false,
+              "fail": true,
+              "pending": false,
+              "context": null,
+              "code": "cy.origin(\"https://auth.invisirisk.com\", () => {\n  cy.get(\"p>a\").should(\"be.visible\").click();\n  cy.url().should(\"include\", \"/reset-password/request/\");\n});",
+              "err": {
+                "message": "CypressError: `cy.origin()` requires the first argument to be a different domain than top. You passed `https://auth.invisirisk.com` to the origin command, while top is at `https://app.invisirisk.com`.\n\nEither the intended page was not visited prior to running the cy.origin block or the cy.origin block may not be needed at all.\n\nhttps://on.cypress.io/origin",
+                "estack": "CypressError: `cy.origin()` requires the first argument to be a different domain than top. You passed `https://auth.invisirisk.com` to the origin command, while top is at `https://app.invisirisk.com`.\n\nEither the intended page was not visited prior to running the cy.origin block or the cy.origin block may not be needed at all.\n\nhttps://on.cypress.io/origin\n    at Validator.validateLocation (https://app.invisirisk.com/__cypress/runner/cypress_runner.js:120857:68)\n    at Context.origin (https://app.invisirisk.com/__cypress/runner/cypress_runner.js:120560:17)\n    at wrapped (https://app.invisirisk.com/__cypress/runner/cypress_runner.js:138663:43)\nFrom Your Spec Code:\n    at Context.eval (webpack://clear/./cypress/e2e/Pages/Dashboard/LoginPage.cy.js:47:7)",
+                "diff": null
+              },
+              "uuid": "fd232aa8-cf9b-4bf5-9a51-cb1f5924df0d",
+              "parentUUID": "86852cc8-d57d-42a5-868a-48a7743ca735",
+              "isHook": false,
+              "skipped": false
+            }
+          ],
+          "suites": [],
+          "passes": [
+            "f1f70aa6-e16a-4e95-86ca-552775cfaac0",
+            "de7a5e76-4997-470b-89e7-97a8a61e3975"
+          ],
+          "failures": [
+            "49815f18-f0f4-4a05-87c2-b43ab9947ce5",
+            "88754a30-e1e9-44aa-944a-41e107fb22e2",
+            "fd232aa8-cf9b-4bf5-9a51-cb1f5924df0d"
+          ],
+          "pending": [],
+          "skipped": [],
+          "duration": 20764,
+          "root": false,
+          "rootEmpty": false,
+          "_timeout": 2000
+        }
+      ],
+      "passes": [],
+      "failures": [],
+      "pending": [],
+      "skipped": [],
+      "duration": 0,
+      "root": true,
+      "rootEmpty": true,
+      "_timeout": 2000
+    }
+  ],
+  "meta": {
+    "mocha": {
+      "version": "7.0.1"
+    },
+    "mochawesome": {
+      "options": {
+        "quiet": false,
+        "reportFilename": "mochawesome",
+        "saveHtml": true,
+        "saveJson": true,
+        "consoleReporter": "spec",
+        "useInlineDiffs": false,
+        "code": true
+      },
+      "version": "7.1.3"
+    },
+    "marge": {
+      "options": {
+        "reportDir": "cypress/reports",
+        "overwrite": false,
+        "html": true,
+        "json": true
+      },
+      "version": "6.2.0"
+    }
+  }
+}

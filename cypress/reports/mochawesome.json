@@ -1,0 +1,124 @@
+{
+  "stats": {
+    "suites": 1,
+    "tests": 2,
+    "passes": 2,
+    "pending": 0,
+    "failures": 0,
+    "start": "2025-01-31T10:45:56.286Z",
+    "end": "2025-01-31T10:46:25.799Z",
+    "duration": 29513,
+    "testsRegistered": 2,
+    "passPercent": 100,
+    "pendingPercent": 0,
+    "other": 0,
+    "hasOther": false,
+    "skipped": 0,
+    "hasSkipped": false
+  },
+  "results": [
+    {
+      "uuid": "79d275ce-8da4-452b-85ff-e92336a16a93",
+      "title": "",
+      "fullFile": "cypress\\e2e\\Pages\\Artifacts\\Policy.cy.js",
+      "file": "cypress\\e2e\\Pages\\Artifacts\\Policy.cy.js",
+      "beforeHooks": [],
+      "afterHooks": [],
+      "tests": [],
+      "suites": [
+        {
+          "uuid": "b5f1c475-c8d3-4fbb-a351-5e4579548d99",
+          "title": "Policy Management",
+          "fullFile": "",
+          "file": "",
+          "beforeHooks": [],
+          "afterHooks": [],
+          "tests": [
+            {
+              "title": "Validate Adding Policy",
+              "fullTitle": "Policy Management Validate Adding Policy",
+              "timedOut": null,
+              "duration": 14676,
+              "state": "passed",
+              "speed": "slow",
+              "pass": true,
+              "fail": false,
+              "pending": false,
+              "context": null,
+              "code": "cy.get(_Selector.Selector.AddArtifactButton).click({\n  force: true\n});\nconst PolicyName = \"DemoPolicy\" + Math.floor(100 + Math.random() * 900);\ncy.fillArtifactForm(PolicyName, \"60b6a5d1-c92b-400f-a907-07295cd66468\", \"Policy.rego\");\ncy.get(_Selector.Selector.ArtifactFormSubmitButton).click();\ncy.get(_Selector.Selector.PopupMessage).should(\"be.visible\").contains(`Artifact ${PolicyName} has been added.`);",
+              "err": {},
+              "uuid": "a43d9ac8-c214-45b1-ac69-6b7f33719e81",
+              "parentUUID": "b5f1c475-c8d3-4fbb-a351-5e4579548d99",
+              "isHook": false,
+              "skipped": false
+            },
+            {
+              "title": "Validating add Policy From the Scratch",
+              "fullTitle": "Policy Management Validating add Policy From the Scratch",
+              "timedOut": null,
+              "duration": 11695,
+              "state": "passed",
+              "speed": "slow",
+              "pass": true,
+              "fail": false,
+              "pending": false,
+              "context": null,
+              "code": "const PolicyName = \"DemoArtifact\" + Math.floor(1000 + Math.random() * 9000);\ncy.get(_Selector.Selector.AddArtifactButton).click({\n  force: true\n});\ncy.get(\".underline\").should(\"be.visible\").click();\ncy.get('input[name=\"artifactName\"]').should(\"be.visible\").type(PolicyName);\ncy.get('select[name=\"artifactTypeId\"]').select(\"60b6a5d1-c92b-400f-a907-07295cd66468\", {\n  force: true\n});\ncy.get(\".gap-6 > .flex > :nth-child(2) > .relative > .absolute\").should(\"be.visible\").type(\"Test.rego\");\ncy.get(_Selector.Selector.ArtifactFormSubmitButton).click();\ncy.get(_Selector.Selector.PopupMessage).should(\"be.visible\").contains(`${PolicyName} has been added.`);",
+              "err": {},
+              "uuid": "92e7726b-f726-456b-9d9e-b1ea3260e610",
+              "parentUUID": "b5f1c475-c8d3-4fbb-a351-5e4579548d99",
+              "isHook": false,
+              "skipped": false
+            }
+          ],
+          "suites": [],
+          "passes": [
+            "a43d9ac8-c214-45b1-ac69-6b7f33719e81",
+            "92e7726b-f726-456b-9d9e-b1ea3260e610"
+          ],
+          "failures": [],
+          "pending": [],
+          "skipped": [],
+          "duration": 26371,
+          "root": false,
+          "rootEmpty": false,
+          "_timeout": 2000
+        }
+      ],
+      "passes": [],
+      "failures": [],
+      "pending": [],
+      "skipped": [],
+      "duration": 0,
+      "root": true,
+      "rootEmpty": true,
+      "_timeout": 2000
+    }
+  ],
+  "meta": {
+    "mocha": {
+      "version": "7.0.1"
+    },
+    "mochawesome": {
+      "options": {
+        "quiet": false,
+        "reportFilename": "mochawesome",
+        "saveHtml": true,
+        "saveJson": true,
+        "consoleReporter": "spec",
+        "useInlineDiffs": false,
+        "code": true
+      },
+      "version": "7.1.3"
+    },
+    "marge": {
+      "options": {
+        "reportDir": "cypress/reports",
+        "overwrite": false,
+        "html": true,
+        "json": true
+      },
+      "version": "6.2.0"
+    }
+  }
+}

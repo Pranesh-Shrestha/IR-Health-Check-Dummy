@@ -1,0 +1,409 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "com.github.KakarottoCui/SpringBootVuePythonHadoopTravel",
+  "documentNamespace": "https://spdx.org/spdxdocs/protobom/2471acf1-e48e-4df3-af9b-1863a1e5c2a7",
+  "comment": "Exact versions could not be resolved for some packages. For more information: https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/about-the-dependency-graph#dependencies-included.",
+  "creationInfo": {
+    "creators": ["Tool: protobom-devel", "Tool: GitHub.com-Dependency-Graph"],
+    "created": "2024-11-22T06:49:00Z"
+  },
+  "packages": [
+    {
+      "name": "org.projectlombok:lombok",
+      "SPDXID": "SPDXRef-maven-org.projectlombok-lombok-7b26ed",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:maven/org.projectlombok/lombok"
+        }
+      ]
+    },
+    {
+      "name": "org.springframework.boot:spring-boot-starter-test",
+      "SPDXID": "SPDXRef-maven-org.springframework.boot-spring-boot-starter-test-d87ce5",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:maven/org.springframework.boot/spring-boot-starter-test"
+        }
+      ]
+    },
+    {
+      "name": "org.springframework.boot:spring-boot-starter-web",
+      "SPDXID": "SPDXRef-maven-org.springframework.boot-spring-boot-starter-web-41e328",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:maven/org.springframework.boot/spring-boot-starter-web"
+        }
+      ]
+    },
+    {
+      "name": "org.apache.maven.plugins:maven-compiler-plugin",
+      "SPDXID": "SPDXRef-maven-org.apache.maven.plugins-maven-compiler-plugin-613322",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:maven/org.apache.maven.plugins/maven-compiler-plugin"
+        }
+      ]
+    },
+    {
+      "name": "mysql:mysql-connector-java",
+      "SPDXID": "SPDXRef-maven-mysql-mysql-connector-java-c8865b",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:maven/mysql/mysql-connector-java"
+        }
+      ]
+    },
+    {
+      "name": "org.apache.commons:commons-lang3",
+      "SPDXID": "SPDXRef-maven-org.apache.commons-commons-lang3-3.11-58cb0d",
+      "versionInfo": "3.11",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "Apache-2.0",
+      "copyrightText": "Copyright 2001-2020 The Apache Software Foundation",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:maven/org.apache.commons/commons-lang3@3.11"
+        }
+      ]
+    },
+    {
+      "name": "commons-codec:commons-codec",
+      "SPDXID": "SPDXRef-maven-commons-codec-commons-codec-1.10-447376",
+      "versionInfo": "1.10",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "Apache-2.0",
+      "copyrightText": "Copyright (c) 2002 Kevin Atkinson (kevina@gnu.org), Copyright (c) 2008 Alexander Beider & Stephen P. Morse, Copyright 2002-2014 The Apache Software Foundation",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:maven/commons-codec/commons-codec@1.10"
+        }
+      ]
+    },
+    {
+      "name": "commons-io:commons-io",
+      "SPDXID": "SPDXRef-maven-commons-io-commons-io-2.6-91a7d4",
+      "versionInfo": "2.6",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "Apache-2.0",
+      "copyrightText": "Copyright 2002-2017 The Apache Software Foundation",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:maven/commons-io/commons-io@2.6"
+        }
+      ]
+    },
+    {
+      "name": "com.github.whvcse:easy-captcha",
+      "SPDXID": "SPDXRef-maven-com.github.whvcse-easy-captcha-1.6.2-892651",
+      "versionInfo": "1.6.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "Apache-2.0",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:maven/com.github.whvcse/easy-captcha@1.6.2"
+        }
+      ]
+    },
+    {
+      "name": "org.apache.poi:poi-ooxml",
+      "SPDXID": "SPDXRef-maven-org.apache.poi-poi-ooxml-3.14-fc0b53",
+      "versionInfo": "3.14",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "copyrightText": "Copyright (c) 2000-2003, BEA Systems, <http://www.bea.com/>, Copyright (c) 2006-2007 Valek Filippov (frob@df.ru), Copyright (c) 2009-2014 FedICT, Copyright 2001-2003 (c) World Wide Web Consortium (Massachusetts Institute of Technology, European Research Consortium for Informatics and Mathematics, Keio University), Copyright 2002 Yuval Oren, Copyright 2003-2016 The Apache Software Foundation",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:maven/org.apache.poi/poi-ooxml@3.14"
+        }
+      ]
+    },
+    {
+      "name": "net.coobird:thumbnailator",
+      "SPDXID": "SPDXRef-maven-net.coobird-thumbnailator-0.4.8-6ce22e",
+      "versionInfo": "0.4.8",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:maven/net.coobird/thumbnailator@0.4.8"
+        }
+      ]
+    },
+    {
+      "name": "org.apache.poi:poi",
+      "SPDXID": "SPDXRef-maven-org.apache.poi-poi-3.14-d8263e",
+      "versionInfo": "3.14",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "Apache-2.0",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:maven/org.apache.poi/poi@3.14"
+        }
+      ]
+    },
+    {
+      "name": "com.alibaba:fastjson",
+      "SPDXID": "SPDXRef-maven-com.alibaba-fastjson-1.2.58-665fca",
+      "versionInfo": "1.2.58",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "Apache-2.0",
+      "copyrightText": "Copyright 1999-2017 Alibaba Group.",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:maven/com.alibaba/fastjson@1.2.58"
+        }
+      ]
+    },
+    {
+      "name": "com.baomidou:mybatis-plus-boot-starter",
+      "SPDXID": "SPDXRef-maven-com.baomidou-mybatis-plus-boot-starter-3.4.2-b58159",
+      "versionInfo": "3.4.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "Apache-2.0",
+      "copyrightText": "Copyright 2011-2019",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:maven/com.baomidou/mybatis-plus-boot-starter@3.4.2"
+        }
+      ]
+    },
+    {
+      "name": "org.apache.poi:poi-ooxml-schemas",
+      "SPDXID": "SPDXRef-maven-org.apache.poi-poi-ooxml-schemas-3.14-2e9f19",
+      "versionInfo": "3.14",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "copyrightText": "Copyright (c) 2000-2003, BEA Systems, <http://www.bea.com/>, Copyright (c) 2006-2007 Valek Filippov (frob@df.ru), Copyright (c) 2009-2014 FedICT, Copyright (c) Microsoft Corporation, Copyright 2001-2003 (c) World Wide Web Consortium (Massachusetts Institute of Technology, European Research Consortium for Informatics and Mathematics, Keio University), Copyright 2002 Yuval Oren, Copyright 2003-2016 The Apache Software Foundation",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:maven/org.apache.poi/poi-ooxml-schemas@3.14"
+        }
+      ]
+    },
+    {
+      "name": "cn.hutool:hutool-all",
+      "SPDXID": "SPDXRef-maven-cn.hutool-hutool-all-4.6.10-575b3d",
+      "versionInfo": "4.6.10",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:maven/cn.hutool/hutool-all@4.6.10"
+        }
+      ]
+    },
+    {
+      "name": "com.baidu.aip:java-sdk",
+      "SPDXID": "SPDXRef-maven-com.baidu.aip-java-sdk-4.12.0-6455d5",
+      "versionInfo": "4.12.0",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "Apache-2.0",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:maven/com.baidu.aip/java-sdk@4.12.0"
+        }
+      ]
+    },
+    {
+      "name": "org.springframework.data:spring-data-commons",
+      "SPDXID": "SPDXRef-maven-org.springframework.data-spring-data-commons-2.5.6-8bbc92",
+      "versionInfo": "2.5.6",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "Apache-2.0",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:maven/org.springframework.data/spring-data-commons@2.5.6"
+        }
+      ]
+    },
+    {
+      "name": "org.springframework.boot:spring-boot-maven-plugin",
+      "SPDXID": "SPDXRef-maven-org.springframework.boot-spring-boot-maven-plugin-2.5.11-85c2b1",
+      "versionInfo": "2.5.11",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "Apache-2.0",
+      "copyrightText": "Copyright (c) 2012-2022 Pivotal, Inc.",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:maven/org.springframework.boot/spring-boot-maven-plugin@2.5.11"
+        }
+      ]
+    },
+    {
+      "name": "com.github.KakarottoCui/SpringBootVuePythonHadoopTravel",
+      "SPDXID": "SPDXRef-github-KakarottoCui-SpringBootVuePythonHadoopTravel-main-510593",
+      "versionInfo": "main",
+      "downloadLocation": "git+https://github.com/KakarottoCui/SpringBootVuePythonHadoopTravel",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:github/KakarottoCui/SpringBootVuePythonHadoopTravel@main"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-github-KakarottoCui-SpringBootVuePythonHadoopTravel-main-510593",
+      "relatedSpdxElement": "SPDXRef-maven-org.projectlombok-lombok-7b26ed",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-github-KakarottoCui-SpringBootVuePythonHadoopTravel-main-510593",
+      "relatedSpdxElement": "SPDXRef-maven-org.springframework.boot-spring-boot-starter-test-d87ce5",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-github-KakarottoCui-SpringBootVuePythonHadoopTravel-main-510593",
+      "relatedSpdxElement": "SPDXRef-maven-org.springframework.boot-spring-boot-starter-web-41e328",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-github-KakarottoCui-SpringBootVuePythonHadoopTravel-main-510593",
+      "relatedSpdxElement": "SPDXRef-maven-org.apache.maven.plugins-maven-compiler-plugin-613322",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-github-KakarottoCui-SpringBootVuePythonHadoopTravel-main-510593",
+      "relatedSpdxElement": "SPDXRef-maven-mysql-mysql-connector-java-c8865b",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-github-KakarottoCui-SpringBootVuePythonHadoopTravel-main-510593",
+      "relatedSpdxElement": "SPDXRef-maven-org.apache.commons-commons-lang3-3.11-58cb0d",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-github-KakarottoCui-SpringBootVuePythonHadoopTravel-main-510593",
+      "relatedSpdxElement": "SPDXRef-maven-commons-codec-commons-codec-1.10-447376",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-github-KakarottoCui-SpringBootVuePythonHadoopTravel-main-510593",
+      "relatedSpdxElement": "SPDXRef-maven-commons-io-commons-io-2.6-91a7d4",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-github-KakarottoCui-SpringBootVuePythonHadoopTravel-main-510593",
+      "relatedSpdxElement": "SPDXRef-maven-com.github.whvcse-easy-captcha-1.6.2-892651",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-github-KakarottoCui-SpringBootVuePythonHadoopTravel-main-510593",
+      "relatedSpdxElement": "SPDXRef-maven-org.apache.poi-poi-ooxml-3.14-fc0b53",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-github-KakarottoCui-SpringBootVuePythonHadoopTravel-main-510593",
+      "relatedSpdxElement": "SPDXRef-maven-net.coobird-thumbnailator-0.4.8-6ce22e",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-github-KakarottoCui-SpringBootVuePythonHadoopTravel-main-510593",
+      "relatedSpdxElement": "SPDXRef-maven-org.apache.poi-poi-3.14-d8263e",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-github-KakarottoCui-SpringBootVuePythonHadoopTravel-main-510593",
+      "relatedSpdxElement": "SPDXRef-maven-com.alibaba-fastjson-1.2.58-665fca",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-github-KakarottoCui-SpringBootVuePythonHadoopTravel-main-510593",
+      "relatedSpdxElement": "SPDXRef-maven-com.baomidou-mybatis-plus-boot-starter-3.4.2-b58159",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-github-KakarottoCui-SpringBootVuePythonHadoopTravel-main-510593",
+      "relatedSpdxElement": "SPDXRef-maven-org.apache.poi-poi-ooxml-schemas-3.14-2e9f19",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-github-KakarottoCui-SpringBootVuePythonHadoopTravel-main-510593",
+      "relatedSpdxElement": "SPDXRef-maven-cn.hutool-hutool-all-4.6.10-575b3d",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-github-KakarottoCui-SpringBootVuePythonHadoopTravel-main-510593",
+      "relatedSpdxElement": "SPDXRef-maven-com.baidu.aip-java-sdk-4.12.0-6455d5",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-github-KakarottoCui-SpringBootVuePythonHadoopTravel-main-510593",
+      "relatedSpdxElement": "SPDXRef-maven-org.springframework.data-spring-data-commons-2.5.6-8bbc92",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-github-KakarottoCui-SpringBootVuePythonHadoopTravel-main-510593",
+      "relatedSpdxElement": "SPDXRef-maven-org.springframework.boot-spring-boot-maven-plugin-2.5.11-85c2b1",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relatedSpdxElement": "SPDXRef-github-KakarottoCui-SpringBootVuePythonHadoopTravel-main-510593",
+      "relationshipType": "DESCRIBES"
+    }
+  ]
+}

@@ -1,0 +1,143 @@
+{
+  "stats": {
+    "suites": 1,
+    "tests": 3,
+    "passes": 3,
+    "pending": 0,
+    "failures": 0,
+    "start": "2025-01-31T10:46:27.940Z",
+    "end": "2025-01-31T10:46:59.389Z",
+    "duration": 31449,
+    "testsRegistered": 3,
+    "passPercent": 100,
+    "pendingPercent": 0,
+    "other": 0,
+    "hasOther": false,
+    "skipped": 0,
+    "hasSkipped": false
+  },
+  "results": [
+    {
+      "uuid": "9d77b2b3-3bd7-4f3c-99c6-245e17a79ee2",
+      "title": "",
+      "fullFile": "cypress\\e2e\\Pages\\Dashboard\\Dashboard.cy.js",
+      "file": "cypress\\e2e\\Pages\\Dashboard\\Dashboard.cy.js",
+      "beforeHooks": [],
+      "afterHooks": [],
+      "tests": [],
+      "suites": [
+        {
+          "uuid": "c76d764b-07b9-4b52-b10f-7bf34344aa7b",
+          "title": "Dashboard",
+          "fullFile": "",
+          "file": "",
+          "beforeHooks": [],
+          "afterHooks": [],
+          "tests": [
+            {
+              "title": "Validate Vulnerability Count accuracy of the dashboard",
+              "fullTitle": "Dashboard Validate Vulnerability Count accuracy of the dashboard",
+              "timedOut": null,
+              "duration": 11442,
+              "state": "passed",
+              "speed": "slow",
+              "pass": true,
+              "fail": false,
+              "pending": false,
+              "context": null,
+              "code": "cy.get(\"p.text-red-500\").eq(0).invoke(\"text\").then(value => {\n  const numericValue = parseInt(value.trim(), 10);\n  cy.NavigateReports();\n  cy.get('[href=\"/reports/vulnerabilities\"]').click();\n  cy.get(\"p.text-xs\").contains(numericValue);\n});",
+              "err": {},
+              "uuid": "aeb4ea72-b2fc-445e-a7f1-449ac15198af",
+              "parentUUID": "c76d764b-07b9-4b52-b10f-7bf34344aa7b",
+              "isHook": false,
+              "skipped": false
+            },
+            {
+              "title": "Validate Vulnerable Package Count accuracy of the dashboard",
+              "fullTitle": "Dashboard Validate Vulnerable Package Count accuracy of the dashboard",
+              "timedOut": null,
+              "duration": 9033,
+              "state": "passed",
+              "speed": "medium",
+              "pass": true,
+              "fail": false,
+              "pending": false,
+              "context": null,
+              "code": "cy.get(\"p.text-red-500\").eq(2).invoke(\"text\").then(value => {\n  const numericValue = parseInt(value.trim(), 10);\n  cy.NavigateReports();\n  cy.get('[href=\"/reports/vulnerable-packages\"]').click();\n  cy.get(\"p.text-xs\").contains(numericValue);\n});",
+              "err": {},
+              "uuid": "fb21a214-ba48-4c3b-be74-e779021ac9ff",
+              "parentUUID": "c76d764b-07b9-4b52-b10f-7bf34344aa7b",
+              "isHook": false,
+              "skipped": false
+            },
+            {
+              "title": "Validate Support and Document button",
+              "fullTitle": "Dashboard Validate Support and Document button",
+              "timedOut": null,
+              "duration": 8687,
+              "state": "passed",
+              "speed": "medium",
+              "pass": true,
+              "fail": false,
+              "pending": false,
+              "context": null,
+              "code": "cy.get(_Selector.Selector.HelpButton).invoke(\"removeAttr\", \"target\").click();\ncy.url().should(\"include\", \"https://app.invisirisk.com/documentation/109051923\");",
+              "err": {},
+              "uuid": "6360dfb8-04cb-4034-9af3-6223633db82f",
+              "parentUUID": "c76d764b-07b9-4b52-b10f-7bf34344aa7b",
+              "isHook": false,
+              "skipped": false
+            }
+          ],
+          "suites": [],
+          "passes": [
+            "aeb4ea72-b2fc-445e-a7f1-449ac15198af",
+            "fb21a214-ba48-4c3b-be74-e779021ac9ff",
+            "6360dfb8-04cb-4034-9af3-6223633db82f"
+          ],
+          "failures": [],
+          "pending": [],
+          "skipped": [],
+          "duration": 29162,
+          "root": false,
+          "rootEmpty": false,
+          "_timeout": 2000
+        }
+      ],
+      "passes": [],
+      "failures": [],
+      "pending": [],
+      "skipped": [],
+      "duration": 0,
+      "root": true,
+      "rootEmpty": true,
+      "_timeout": 2000
+    }
+  ],
+  "meta": {
+    "mocha": {
+      "version": "7.0.1"
+    },
+    "mochawesome": {
+      "options": {
+        "quiet": false,
+        "reportFilename": "mochawesome",
+        "saveHtml": true,
+        "saveJson": true,
+        "consoleReporter": "spec",
+        "useInlineDiffs": false,
+        "code": true
+      },
+      "version": "7.1.3"
+    },
+    "marge": {
+      "options": {
+        "reportDir": "cypress/reports",
+        "overwrite": false,
+        "html": true,
+        "json": true
+      },
+      "version": "6.2.0"
+    }
+  }
+}
