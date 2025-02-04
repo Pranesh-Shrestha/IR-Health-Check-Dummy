@@ -23,7 +23,7 @@ jobs:
       - name: Install Cypress and reporter
         run: npm install cypress cypress-mochawesome-reporter
 
-      - name: Run Cypress tests with Mochawesome
+      - name: Run Cypress tests and capture results
         id: cypress
         continue-on-error: true
         env:
@@ -31,25 +31,41 @@ jobs:
           CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
           CYPRESS_MOCHAWESOME_REPORT_DIR: cypress/reports
         run: |
+          # Run Cypress and capture output
           npx cypress run --env email=$CYPRESS_EMAIL,password=$CYPRESS_PASSWORD \
-            --reporter cypress-multi-reporters \
-            --reporter-options configFile=reporter-config.json \
-            | tee cypress-output.txt
+            --reporter spec \
+            | tee cypress_output.txt
 
-          # Extract test results using grep and awk
-          TOTAL=$(grep -o "Total:\s*[0-9]\+" cypress-output.txt | awk '{print $2}')
-          PASSED=$(grep -o "Passed:\s*[0-9]\+" cypress-output.txt | awk '{print $2}')
-          FAILED=$(grep -o "Failed:\s*[0-9]\+" cypress-output.txt | awk '{print $2}')
-          SKIPPED=$(grep -o "Skipped:\s*[0-9]\+" cypress-output.txt | awk '{print $2}')
+          # Parse the summary line at the end of the output
+          SUMMARY_LINE=$(grep -A1 "└─*" cypress_output.txt | tail -n 1)
+          echo "Summary line: $SUMMARY_LINE"
+          
+          # Extract numbers using awk
+          # The line format is like: "✖ 8 of 8 failed (100%) 01:16 24 3 9 - 12"
+          # where the last numbers are: total passed failed pending skipped
+          TOTAL=$(echo "$SUMMARY_LINE" | awk '{print $(NF-4)}')
+          PASSED=$(echo "$SUMMARY_LINE" | awk '{print $(NF-3)}')
+          FAILED=$(echo "$SUMMARY_LINE" | awk '{print $(NF-2)}')
+          PENDING=$(echo "$SUMMARY_LINE" | awk '{print $(NF-1)}')
+          SKIPPED=$(echo "$SUMMARY_LINE" | awk '{print $NF}')
           
           # Calculate success rate
-          if [ "$TOTAL" -gt 0 ]; then
-            SUCCESS_RATE=$(awk "BEGIN {print (($PASSED/$TOTAL) * 100)}")
-          else
+          if [ $TOTAL -eq 0 ]; then
             SUCCESS_RATE=0
+          else
+            SUCCESS_RATE=$(awk "BEGIN {printf \"%.2f\", ($PASSED/$TOTAL) * 100}")
           fi
-
-          # Store results as step outputs
+          
+          # Debug output
+          echo "Parsed Results:"
+          echo "Total: $TOTAL"
+          echo "Passed: $PASSED"
+          echo "Failed: $FAILED"
+          echo "Pending: $PENDING"
+          echo "Skipped: $SKIPPED"
+          echo "Success Rate: $SUCCESS_RATE%"
+          
+          # Set outputs
           echo "total=$TOTAL" >> $GITHUB_OUTPUT
           echo "passed=$PASSED" >> $GITHUB_OUTPUT
           echo "failed=$FAILED" >> $GITHUB_OUTPUT
@@ -70,25 +86,67 @@ jobs:
       - name: Send notification to Microsoft Teams
         if: always()
         run: |
-          STATUS="✅ IR Daily Health Check tests completed"
-          if [ "${{ steps.cypress.outputs.failed }}" != "0" ]; then
+          # Determine status and color based on results
+          if [ "${{ steps.cypress.outputs.failed }}" == "0" ]; then
+            STATUS="✅ IR Daily Health Check tests completed successfully"
+            COLOR="00FF00"  # Green
+          else
             STATUS="❌ IR Daily Health Check tests failed"
+            COLOR="FF0000"  # Red
           fi
 
           JSON_PAYLOAD=$(cat << EOF
           {
-            "title": "IR Daily Health Check Test Results",
-            "sections": [{
-              "facts": [
-                { "name": "Total Tests:", "value": "${{ steps.cypress.outputs.total }}" },
-                { "name": "Passed:", "value": "${{ steps.cypress.outputs.passed }}" },
-                { "name": "Failed:", "value": "${{ steps.cypress.outputs.failed }}" },
-                { "name": "Skipped:", "value": "${{ steps.cypress.outputs.skipped }}" },
-                { "name": "Success Rate:", "value": "${{ steps.cypress.outputs.success_rate }}%" }
-              ]
-            }],
-            "text": "$STATUS\n[View Detailed Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})",
-            "themeColor": "${{ steps.cypress.outputs.failed == 0 && '0076D7' || 'FF0000' }}"
+            "type": "message",
+            "attachments": [
+              {
+                "contentType": "application/vnd.microsoft.card.adaptive",
+                "content": {
+                  "type": "AdaptiveCard",
+                  "body": [
+                    {
+                      "type": "TextBlock",
+                      "text": "$STATUS",
+                      "weight": "bolder",
+                      "size": "large",
+                      "color": "${{ steps.cypress.outputs.failed == 0 && 'good' || 'attention' }}"
+                    },
+                    {
+                      "type": "FactSet",
+                      "facts": [
+                        {
+                          "title": "Total Tests",
+                          "value": "${{ steps.cypress.outputs.total }}"
+                        },
+                        {
+                          "title": "✅ Passed",
+                          "value": "${{ steps.cypress.outputs.passed }}"
+                        },
+                        {
+                          "title": "❌ Failed",
+                          "value": "${{ steps.cypress.outputs.failed }}"
+                        },
+                        {
+                          "title": "⏭️ Skipped",
+                          "value": "${{ steps.cypress.outputs.skipped }}"
+                        },
+                        {
+                          "title": "📈 Success Rate",
+                          "value": "${{ steps.cypress.outputs.success_rate }}%"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "TextBlock",
+                      "text": "[View Detailed Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+                      "wrap": true
+                    }
+                  ],
+                  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                  "version": "1.0"
+                }
+              }
+            ]
           }
           EOF
           )
