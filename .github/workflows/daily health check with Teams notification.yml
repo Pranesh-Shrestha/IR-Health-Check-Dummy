@@ -32,25 +32,35 @@ jobs:
       - name: Extract test count from Cypress output
         id: extract_test_count
         run: |
-          # Extract the test count from the Cypress output
-          TEST_COUNT=$(grep -oP '(?<=Tests:        )\d+' cypress-output.log || echo "0")
-          PASS_COUNT=$(grep -oP '(?<=Passing:      )\d+' cypress-output.log || echo "0")
-          FAIL_COUNT=$(grep -oP '(?<=Failing:      )\d+' cypress-output.log || echo "0")
-          PENDING_COUNT=$(grep -oP '(?<=Pending:      )\d+' cypress-output.log || echo "0")
-
-          # Output the counts for use in subsequent steps
+          # More robust patterns to match Cypress output
+          TOTAL_PATTERN="[[:space:]]([0-9]+)[[:space:]]total"
+          PASSED_PATTERN="[[:space:]]([0-9]+)[[:space:]]passing"
+          FAILED_PATTERN="[[:space:]]([0-9]+)[[:space:]]failing"
+          SKIPPED_PATTERN="[[:space:]]([0-9]+)[[:space:]]skipped"
+          
+          # Extract counts using case-insensitive grep
+          TEST_COUNT=$(grep -iP "$TOTAL_PATTERN" cypress-output.log | grep -oP "$TOTAL_PATTERN" | grep -oP "[0-9]+" || echo "0")
+          PASS_COUNT=$(grep -iP "$PASSED_PATTERN" cypress-output.log | grep -oP "$PASSED_PATTERN" | grep -oP "[0-9]+" || echo "0")
+          FAIL_COUNT=$(grep -iP "$FAILED_PATTERN" cypress-output.log | grep -oP "$FAILED_PATTERN" | grep -oP "[0-9]+" || echo "0")
+          PENDING_COUNT=$(grep -iP "$SKIPPED_PATTERN" cypress-output.log | grep -oP "$SKIPPED_PATTERN" | grep -oP "[0-9]+" || echo "0")
+          
+          # Debug output
+          echo "Found counts in log file:"
+          echo "Total: $TEST_COUNT"
+          echo "Passed: $PASS_COUNT"
+          echo "Failed: $FAIL_COUNT"
+          echo "Pending: $PENDING_COUNT"
+          
+          # Set environment variables
           echo "TEST_COUNT=$TEST_COUNT" >> $GITHUB_ENV
           echo "PASS_COUNT=$PASS_COUNT" >> $GITHUB_ENV
           echo "FAIL_COUNT=$FAIL_COUNT" >> $GITHUB_ENV
           echo "PENDING_COUNT=$PENDING_COUNT" >> $GITHUB_ENV
 
-      - name: Debug - Check Extracted Test Counts
-        run: |
-          echo "Total Tests: $TEST_COUNT"
-          echo "Passing Tests: $PASS_COUNT"
-          echo "Failing Tests: $FAIL_COUNT"
-          echo "Pending Tests: $PENDING_COUNT"
+      - name: Debug - Display Cypress Output
+        run: cat cypress-output.log
 
+      # Rest of the steps remain the same...
       - name: Generate merged report
         if: always()
         run: |
