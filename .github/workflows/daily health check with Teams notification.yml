@@ -2,7 +2,7 @@ name: Cypress Tests with Report and Notification on TEAMS
 
 on:
   schedule:
-    - cron: "0 */6 * * *" # 6hours
+    - cron: "0 */6 * * *" # Every 6 hours
   workflow_dispatch:
 
 jobs:
@@ -31,31 +31,36 @@ jobs:
           CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
           CYPRESS_MOCHAWESOME_REPORT_DIR: cypress/reports
         run: |
-          # Run Cypress and capture output
+          # Run Cypress and capture output, stripping ANSI escape sequences
           npx cypress run --env email=$CYPRESS_EMAIL,password=$CYPRESS_PASSWORD \
             --reporter spec \
+            | sed 's/\x1b\[[0-9;]*m//g' \
             | tee cypress_output.txt
 
           # Parse the summary line at the end of the output
           SUMMARY_LINE=$(grep -A1 "└─*" cypress_output.txt | tail -n 1)
           echo "Summary line: $SUMMARY_LINE"
-          
+
+          # Validate summary line format
+          if [[ -z "$SUMMARY_LINE" ]]; then
+            echo "Error: Unable to parse Cypress summary line."
+            exit 1
+          fi
+
           # Extract numbers using awk
-          # The line format is like: "✖ 8 of 8 failed (100%) 01:16 24 3 9 - 12"
-          # where the last numbers are: total passed failed pending skipped
           TOTAL=$(echo "$SUMMARY_LINE" | awk '{print $(NF-4)}')
           PASSED=$(echo "$SUMMARY_LINE" | awk '{print $(NF-3)}')
           FAILED=$(echo "$SUMMARY_LINE" | awk '{print $(NF-2)}')
           PENDING=$(echo "$SUMMARY_LINE" | awk '{print $(NF-1)}')
           SKIPPED=$(echo "$SUMMARY_LINE" | awk '{print $NF}')
-          
+
           # Calculate success rate
-          if [ $TOTAL -eq 0 ]; then
+          if [[ $TOTAL -eq 0 ]]; then
             SUCCESS_RATE=0
           else
             SUCCESS_RATE=$(awk "BEGIN {printf \"%.2f\", ($PASSED/$TOTAL) * 100}")
           fi
-          
+
           # Debug output
           echo "Parsed Results:"
           echo "Total: $TOTAL"
@@ -64,7 +69,7 @@ jobs:
           echo "Pending: $PENDING"
           echo "Skipped: $SKIPPED"
           echo "Success Rate: $SUCCESS_RATE%"
-          
+
           # Set outputs
           echo "total=$TOTAL" >> $GITHUB_OUTPUT
           echo "passed=$PASSED" >> $GITHUB_OUTPUT
@@ -89,10 +94,10 @@ jobs:
           # Determine status and color based on results
           if [ "${{ steps.cypress.outputs.failed }}" == "0" ]; then
             STATUS="✅ IR Daily Health Check tests completed successfully"
-            COLOR="00FF00"  # Green
+            COLOR="good"
           else
             STATUS="❌ IR Daily Health Check tests failed"
-            COLOR="FF0000"  # Red
+            COLOR="attention"
           fi
 
           JSON_PAYLOAD=$(cat << EOF
@@ -109,7 +114,7 @@ jobs:
                       "text": "$STATUS",
                       "weight": "bolder",
                       "size": "large",
-                      "color": "${{ steps.cypress.outputs.failed == 0 && 'good' || 'attention' }}"
+                      "color": "$COLOR"
                     },
                     {
                       "type": "FactSet",
@@ -151,6 +156,10 @@ jobs:
           EOF
           )
 
-          curl -H "Content-Type: application/json" -d "$JSON_PAYLOAD" $TEAMS_WEBHOOK_URL
+          # Send notification to Teams
+          if ! curl -H "Content-Type: application/json" -d "$JSON_PAYLOAD" "$TEAMS_WEBHOOK_URL"; then
+            echo "Failed to send notification to Microsoft Teams."
+            exit 1
+          fi
         env:
           TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
