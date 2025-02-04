@@ -28,12 +28,12 @@ jobs:
           CYPRESS_EMAIL: ${{ secrets.CYPRESS_EMAIL }}
           CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
         run: |
-          # Run Cypress with proper command structure
+          # Run Cypress with correct options
           npx cypress run \
             --env email=$CYPRESS_EMAIL,password=$CYPRESS_PASSWORD \
             --reporter mochawesome \
             --reporter-options "reportDir=cypress/reports,overwrite=false,html=true,json=true" \
-            --retries 2 \
+            --config retries=2 \
             2>&1 | tee cypress-output.log || true
 
           # Store the Cypress exit code
@@ -87,6 +87,7 @@ jobs:
           echo "Failed: $FAILED"
           echo "Pending: $PENDING"
 
+      # Rest of the steps remain the same...
       - name: Generate merged report
         if: always()
         run: |
