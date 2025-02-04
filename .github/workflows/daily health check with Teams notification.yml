@@ -1,48 +1,47 @@
 name: Cypress Tests with Report and Notification on TEAMS
- 
+
 on:
-  schedule:
-    - cron: "0 */6 * * *"  # 6hours 
   workflow_dispatch:
- 
+
 jobs:
   cypress-tests:
     runs-on: ubuntu-latest
- 
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
- 
+        uses: actions/checkout@v4
+
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '16'
- 
+          node-version: '20'
+
       - name: Install dependencies
         run: npm install
- 
+
       - name: Install Cypress and reporter
         run: npm install cypress cypress-mochawesome-reporter
- 
+
       - name: Run Cypress tests with Mochawesome
         env:
           CYPRESS_EMAIL: ${{ secrets.CYPRESS_EMAIL }}
           CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
-          CYPRESS_MOCHAWESOME_REPORT_DIR: cypress/reports  # Moved inside the `env` block
         run: |
-          echo "Email: $CYPRESS_EMAIL"  # Debugging
-          echo "Password: $CYPRESS_PASSWORD"  # Debugging
           npx cypress run --env email=$CYPRESS_EMAIL,password=$CYPRESS_PASSWORD --reporter mochawesome --reporter-options "reportDir=cypress/reports,overwrite=false,html=true,json=true"
- 
+
       - name: Debug - Check Reports Directory
         run: ls -R cypress/reports || echo "No reports generated"
-        
+
       - name: Generate merged report
         if: always()
         run: |
-          npx mochawesome-merge cypress/reports/*.json > cypress/reports/full_report.json
-          npx marge cypress/reports/full_report.json -f report -o cypress/reports
- 
+          if ls cypress/reports/*.json 1>/dev/null 2>&1; then
+            npx mochawesome-merge cypress/reports/*.json > cypress/reports/full_report.json
+            npx marge cypress/reports/full_report.json -f report -o cypress/reports
+          else
+            echo "No JSON reports found. Skipping merge."
+          fi
+
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -54,36 +53,36 @@ jobs:
             cypress/videos
           retention-days: 30
           if-no-files-found: warn
- 
+
       - name: Process and send results to Teams
         if: always()
         env:
           TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
         run: |
-          # Check if report exists
           if [ -f "cypress/reports/full_report.json" ]; then
-            # Extract test results
             STATS=$(jq '.stats' cypress/reports/full_report.json)
             PASS_COUNT=$(echo $STATS | jq '.passes')
             FAIL_COUNT=$(echo $STATS | jq '.failures')
             PENDING_COUNT=$(echo $STATS | jq '.pending')
             TOTAL_COUNT=$(echo $STATS | jq '.tests')
             DURATION=$(echo $STATS | jq '.duration')
-            
-            # Format duration to seconds
+
             DURATION_SEC=$(echo "scale=2; $DURATION/1000" | bc)
-            
-            # Calculate success rate
-            SUCCESS_RATE=$(echo "scale=2; ($PASS_COUNT * 100)/$TOTAL_COUNT" | bc)
-            
-            # Determine status color
-            if [ $FAIL_COUNT -eq 0 ]; then
-              COLOR="00ff00"  # Green
+
+            if [ $TOTAL_COUNT -eq 0 ]; then
+              SUCCESS_RATE="0.00"
             else
-              COLOR="ff0000"  # Red
+              SUCCESS_RATE=$(echo "scale=2; ($PASS_COUNT * 100)/$TOTAL_COUNT" | bc)
             fi
-            
-            # Create Teams message card
+
+            if [ $FAIL_COUNT -eq 0 ]; then
+              COLOR="good"
+              STATUS="✅ Success"
+            else
+              COLOR="attention"
+              STATUS="❌ Failed"
+            fi
+
             curl -H "Content-Type: application/json" -X POST -d '{
               "type": "message",
               "attachments": [{
@@ -94,15 +93,22 @@ jobs:
                     "type": "TextBlock",
                     "size": "Large",
                     "weight": "Bolder",
-                    "text": "Cypress Test Results"
+                    "text": "Cypress Test Results",
+                    "color": "'"$COLOR"'"
+                  },
+                  {
+                    "type": "TextBlock",
+                    "text": "'"$STATUS"'",
+                    "weight": "Bolder",
+                    "color": "'"$COLOR"'"
                   },
                   {
                     "type": "FactSet",
                     "facts": [
-                      { "title": "Total Tests", "value": "'"$TOTAL_COUNT"'" },
-                      { "title": "Passed", "value": "'"$PASS_COUNT"'" },
-                      { "title": "Failed", "value": "'"$FAIL_COUNT"'" },
-                      { "title": "Pending", "value": "'"$PENDING_COUNT"'" },
+                      { "title": "Total Tests", "value": '$TOTAL_COUNT' },
+                      { "title": "Passed", "value": '$PASS_COUNT' },
+                      { "title": "Failed", "value": '$FAIL_COUNT' },
+                      { "title": "Pending", "value": '$PENDING_COUNT' },
                       { "title": "Success Rate", "value": "'"$SUCCESS_RATE"'%" },
                       { "title": "Duration", "value": "'"$DURATION_SEC"' seconds" }
                     ]
@@ -115,6 +121,19 @@ jobs:
           else
             echo "No test report found"
             curl -H "Content-Type: application/json" -X POST -d '{
-              "text": "⚠️ Cypress test run completed but no report was generated. Please check the workflow logs for errors."
+              "type": "message",
+              "attachments": [{
+                "contentType": "application/vnd.microsoft.card.adaptive",
+                "content": {
+                  "type": "AdaptiveCard",
+                  "body": [{
+                    "type": "TextBlock",
+                    "text": "⚠️ Cypress test run completed but no report was generated. Please check the workflow logs for errors.",
+                    "color": "attention"
+                  }],
+                  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                  "version": "1.2"
+                }
+              }]
             }' $TEAMS_WEBHOOK_URL
           fi
