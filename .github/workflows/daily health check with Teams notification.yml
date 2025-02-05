@@ -2,7 +2,7 @@ name: Cypress Tests with Report and Notification on TEAMS
 
 on:
   schedule:
-    - cron: "0 */6 * * *" # Every 6 hours
+    - cron: "0 6,17 * * *" # 6am and 5pm
   workflow_dispatch:
 
 jobs:
@@ -15,7 +15,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: "16"
 
       - name: Install dependencies
         run: npm install
@@ -47,12 +47,14 @@ jobs:
             exit 1
           fi
 
-          # Extract numbers using awk
-          TOTAL=$(echo "$SUMMARY_LINE" | awk '{print $(NF-4)}')
-          PASSED=$(echo "$SUMMARY_LINE" | awk '{print $(NF-3)}')
-          FAILED=$(echo "$SUMMARY_LINE" | awk '{print $(NF-2)}')
-          PENDING=$(echo "$SUMMARY_LINE" | awk '{print $(NF-1)}')
-          SKIPPED=$(echo "$SUMMARY_LINE" | awk '{print $NF}')
+          # Extract numbers using awk, replacing '-' with '0'
+          TOTAL=$(echo "$SUMMARY_LINE" | awk '{gsub(/-/, "0", $(NF-4)); print $(NF-4)}')
+          PASSED=$(echo "$SUMMARY_LINE" | awk '{gsub(/-/, "0", $(NF-3)); print $(NF-3)}')
+          FAILED=$(echo "$SUMMARY_LINE" | awk '{gsub(/-/, "0", $(NF-2)); print $(NF-2)}')
+          PENDING=$(echo "$SUMMARY_LINE" | awk '{gsub(/-/, "0", $(NF-1)); print $(NF-1)}')
+          SKIPPED=$(echo "$SUMMARY_LINE" | awk '{gsub(/-/, "0", $NF); print $NF}')
+          TOTAL_TIME=$(echo "$SUMMARY_LINE" | grep -oE '[0-9]+:[0-9]+' || echo "0:00")
+          
 
           # Calculate success rate
           if [[ $TOTAL -eq 0 ]]; then
@@ -69,6 +71,7 @@ jobs:
           echo "Pending: $PENDING"
           echo "Skipped: $SKIPPED"
           echo "Success Rate: $SUCCESS_RATE%"
+          echo "Total Time: $TOTAL_TIME"
 
           # Set outputs
           echo "total=$TOTAL" >> $GITHUB_OUTPUT
@@ -76,6 +79,7 @@ jobs:
           echo "failed=$FAILED" >> $GITHUB_OUTPUT
           echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
           echo "success_rate=$SUCCESS_RATE" >> $GITHUB_OUTPUT
+          echo "total_time=$TOTAL_TIME" >> $GITHUB_OUTPUT
 
       - name: Debug - Check Reports Directory
         run: ls -R cypress/reports || echo "No reports generated"
@@ -90,6 +94,8 @@ jobs:
 
       - name: Send notification to Microsoft Teams
         if: always()
+        env:
+          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
         run: |
           # Determine status and color based on results
           FAILED_COUNT="${{ steps.cypress.outputs.failed }}"
@@ -110,49 +116,35 @@ jobs:
                 "content": {
                   "type": "AdaptiveCard",
                   "body": [
-                    {
-                      "type": "TextBlock",
-                      "text": "$STATUS",
-                      "weight": "bolder",
-                      "size": "large",
-                      "color": "$COLOR"
-                    },
-                    {
-                      "type": "FactSet",
-                      "facts": [
-                        {
-                          "title": "Total Tests",
-                          "value": "${{ steps.cypress.outputs.total }}"
-                        },
-                        {
-                          "title": "✅ Passed",
-                          "value": "${{ steps.cypress.outputs.passed }}"
-                        },
-                        {
-                          "title": "❌ Failed",
-                          "value": "${{ steps.cypress.outputs.failed }}"
-                        },
-                        {
-                          "title": "⏭️ Skipped",
-                          "value": "${{ steps.cypress.outputs.skipped }}"
-                        },
-                        {
-                          "title": "📈 Success Rate",
-                          "value": "${{ steps.cypress.outputs.success_rate }}%"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "TextBlock",
-                      "text": "[View Detailed Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})",
-                      "wrap": true
-                    }
-                  ],
-                  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-                  "version": "1.0"
-                }
+                  {
+                    "type": "TextBlock",
+                    "text": "$STATUS",
+                    "weight": "bolder",
+                    "size": "large",
+                    "color": "$COLOR"
+                  },
+                  {
+                    "type": "FactSet",
+                    "facts": [
+                      { "title": "Total Tests", "value": "${{ steps.cypress.outputs.total }}" },
+                      { "title": "✅ Passed", "value": "${{ steps.cypress.outputs.passed }}" },
+                      { "title": "❌ Failed", "value": "${{ steps.cypress.outputs.failed }}" },
+                      { "title": "⏭️ Skipped", "value": "${{ steps.cypress.outputs.skipped }}" },
+                      { "title": "📈 Success Rate", "value": "${{ steps.cypress.outputs.success_rate }}%" },
+                      { "title": "⏳ Total Time", "value": "${{ steps.cypress.outputs.total_time }}" }
+                    ]
+                  },
+                  {
+                    "type": "TextBlock",
+                    "text": "[View Detailed Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+                    "wrap": true
+                  }
+                ],
+                "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                "version": "1.0"
               }
-            ]
+            }
+          ]
           }
           EOF
           )
@@ -162,5 +154,3 @@ jobs:
             echo "Failed to send notification to Microsoft Teams."
             exit 1
           fi
-        env:
-          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
