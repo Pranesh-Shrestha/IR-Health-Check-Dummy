@@ -1,8 +1,6 @@
 name: Cypress Tests with Report and Notification on TEAMS
 
 on:
-  schedule:
-    - cron: "0 6,17 * * *" # 6am and 5pm
   workflow_dispatch:
 
 jobs:
